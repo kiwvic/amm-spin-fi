@@ -1,0 +1,13 @@
+{
+    "orderConfigUrl": "https://raw.githubusercontent.com/kiwvic/amm-bot/master/config.json",
+
+    "tokenRefinanceId": "token.pembrock.near",
+
+    "marketId": 9,
+    "nearAccountId": "account",
+    "contractId": "spot.spin-fi.near",
+    "baseQuantityPEM": 100,
+    "baseQuantityUSDC": 10,
+    "network": "mainnet",
+    "orderDelayMs": 120000
+}
