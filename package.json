@@ -36,8 +36,7 @@
     "pino": "^7.11.0",
     "pino-pretty": "^7.6.1",
     "reflect-metadata": "^0.1.13",
-    "axios": "^0.27.2",
-    "ts-command-line-args": "^2.3.1"
+    "axios": "^0.27.2"
   },
   "volta": {
     "node": "16.13.0"

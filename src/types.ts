@@ -1,22 +1,13 @@
 import { Spin, Market } from "@spinfi/core";
 
-export interface ProgramOptions {
-  marketId: number;
-  nearAccountId: string;
-  tokenRefinanceId: string;
-  contractId: string;
-  baseQuantityPEM: number;
-  baseQuantityUSDC: number;
-  network: "mainnet" | "testnet";
-  orderDelayMs: number;
-}
 
 export interface MarketMakerParams {
   spin: Spin;
-  market: Market;
+  spinHFT: Spin;
+  marketId: number;
   tokenRefinanceId: string;
-  baseQuantityPEM: number;
-  baseQuantityUSDC: number;
+  baseQuantity: number;
+  quoteQuantity: number;
   orderDelayMs: number;
 }
 
@@ -42,3 +33,14 @@ export interface OrderBook {
   buy: Array<Order_>;
   sell: Array<Order_>;
 }
+
+export interface MandatoryHFTIter {
+  counter: number,
+  appeared: boolean
+}
+
+export interface OrderTypeStreak {
+  counter: number,
+  type: number
+}
+

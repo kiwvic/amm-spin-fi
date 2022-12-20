@@ -1,20 +1,17 @@
 import axios from "axios";
-import { homedir } from "os";
-import { keyStores } from "near-api-js";
-import { orderConfigUrl } from "../config.json";
 import { BigNumber } from "bignumber.js";
-import { Order } from "@spinfi/core";
-import { USide } from "@spinfi/core";
+import { Order, USide } from "@spinfi/core";
+import { createApi } from "@spinfi/node";
 import { OrdersConfig } from "./types";
-import { PEM_DECIMAL, USDC_DECIMAL } from "./consts" // TODO
+import * as config from "../config.json"
+import { BASE_DECIMAL, QUOTE_DECIMAL } from "./consts" // TODO
+import BN from "bn.js";
 
-const client = axios.create({
-  baseURL: "https://indexer.ref.finance/",
-});
 
 export async function getPrice(tokenRefinanceId: string) {
-  return client
-    .get("get-token-price", { params: { token_id: tokenRefinanceId } })
+  const client = axios.create({ baseURL: "https://indexer.ref.finance/" });
+  
+  return client.get("get-token-price", {params: {token_id: tokenRefinanceId}})
     .then((res) => res.data.price) as unknown as number;
 }
 
@@ -22,21 +19,13 @@ export async function sleep(n: number) {
   return new Promise((resolve) => setTimeout(resolve, n));
 }
 
-export async function getKeystore() {
-  const HOME_DIR = homedir();
-  const CREDENTIALS_DIR = ".near-credentials";
-  const credentialsPath = HOME_DIR + "/" + CREDENTIALS_DIR;
-
-  return new keyStores.UnencryptedFileSystemKeyStore(credentialsPath);
-}
-
 export async function getOrderConfig() {
-  return (await axios.get(orderConfigUrl!)).data;
+  return require("../order-config.json");
 }
 
 export function convertToDecimals(
   value: string | number,
-  decimal: string | number = PEM_DECIMAL
+  decimal: string | number = BASE_DECIMAL
 ): string {
   return (
     new BigNumber(value)
@@ -47,7 +36,7 @@ export function convertToDecimals(
 
 export function convertWithDecimals(
   value: string | number,
-  decimal: string | number = PEM_DECIMAL
+  decimal: string | number = BASE_DECIMAL
 ): number {
   return (
     new BigNumber(value)
@@ -64,13 +53,13 @@ export function userOrdersToOrderBook(userOrders: Order[]) {
     if (order.o_type === USide.Ask) {
       sell.push({
         quantity: convertWithDecimals(order.remaining),
-        price: convertWithDecimals(order.price, USDC_DECIMAL).toFixed(3),
+        price: convertWithDecimals(order.price, QUOTE_DECIMAL).toFixed(3),
         id: order.id,
       });
     } else if (order.o_type === USide.Bid) {
       buy.push({
         quantity: convertWithDecimals(order.remaining),
-        price: convertWithDecimals(order.price, USDC_DECIMAL).toFixed(3),
+        price: convertWithDecimals(order.price, QUOTE_DECIMAL).toFixed(3),
         id: order.id,
       });
     }
@@ -104,4 +93,51 @@ export function getOrderBookFromConfig(
   });
 
   return { buy, sell };
+}
+
+// export const getBestPrice = (orders: Order[]) => {
+//   let bestAsk = {limitPrice: new BN("0")};
+//   let bestBid = {limitPrice: new BN("1000000000")};
+
+//   for (let order of orders) {
+//     if (order.o_type == USide.Ask && convertToDecimals(order.price) > bestAsk.limitPrice) {
+//       bestAsk = order;
+//     } else if (order.o_type == USide.Bid && order.limitPrice.lt(bestBid.limitPrice)) {
+//       bestBid = order;
+//     }
+//   }
+
+//   return {
+//     bestAskPrice: bestAsk.limitPrice.toNumber() / PRICE_FACTOR, 
+//     bestBidPrice: bestBid.limitPrice.toNumber() / PRICE_FACTOR
+//   };
+// }
+
+export async function getSpin(network: string, nearAccountId: string, nearPrivateKey: string) {
+  return (await createApi({
+    // @ts-ignore
+    network: network,
+    accountId: nearAccountId,
+    privateKey: nearPrivateKey,
+  })).spin;
+}
+
+export const getRandomArbitrary = (min: number, max: number) => {
+  return Math.round(Math.random() * (max - min) + min);
+}
+
+const relDiff = (a: any, b: any) => {
+  return 100*((a-b)/((a+b)/2));
+}
+
+export const changeIndexPrice = (price: number, newPrice: number): number => { 
+  let priceDiff = relDiff(newPrice, price);
+
+  if (priceDiff > 0 && priceDiff > config.priceChangeThresholdPercent) {
+    price += (price * (config.priceChangeThresholdPercent / 100));
+  } else if (priceDiff < 0 && priceDiff < (-1) * config.priceChangeThresholdPercent) {
+    price -= (price * (config.priceChangeThresholdPercent / 100));
+  }
+
+  return price;
 }

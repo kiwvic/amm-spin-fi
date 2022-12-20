@@ -1,13 +1,23 @@
 {
-    "orderConfigUrl": "https://raw.githubusercontent.com/kiwvic/amm-bot/master/config.json",
+    "nearAccountId": "abc",
+    "privateKey": "ab",
+    "nearAccountIdHFT": "abc",
+    "privateKeyHFT": "abc",
 
     "tokenRefinanceId": "token.pembrock.near",
 
     "marketId": 9,
-    "nearAccountId": "account",
-    "contractId": "spot.spin-fi.near",
-    "baseQuantityPEM": 100,
-    "baseQuantityUSDC": 10,
+    "baseQuantity": 200,
+    "quoteQuantity": 20,
     "network": "mainnet",
-    "orderDelayMs": 120000
+    "orderDelayMs": 120000,
+
+    "hft": true,
+    "hftChance": 0.9,
+    "orderPricePercentHft": 3,
+    "randomTokenMin": 100,
+    "randomTokenMax": 300,
+    "mandatoryIterationRecharge": 1,
+    "sameOrderStreak": 3,
+    "priceChangeThresholdPercent": 1
 }
