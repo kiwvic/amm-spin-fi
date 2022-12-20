@@ -1,10 +1,10 @@
 import axios from "axios";
 import { BigNumber } from "bignumber.js";
-import { Order, USide } from "@spinfi/core";
-import { createApi } from "@spinfi/node";
-import { OrdersConfig } from "./types";
+import { Order, USide, GetOrderbookResponse } from "@spinfi/core";
+import { createApi, } from "@spinfi/node";
+import { OrdersConfig, OrderTypeStreak } from "./types";
 import * as config from "../config.json"
-import { BASE_DECIMAL, QUOTE_DECIMAL } from "./consts" // TODO
+import { BASE_DECIMAL, QUOTE_DECIMAL, PRICE_CONFIG_FIXED, Buy, Sell } from "./consts" // TODO
 import BN from "bn.js";
 
 
@@ -95,23 +95,50 @@ export function getOrderBookFromConfig(
   return { buy, sell };
 }
 
-// export const getBestPrice = (orders: Order[]) => {
-//   let bestAsk = {limitPrice: new BN("0")};
-//   let bestBid = {limitPrice: new BN("1000000000")};
+export const getBestPrice = (orders: GetOrderbookResponse) => {
+  return {
+    bestAskPrice: convertWithDecimals(orders.ask_orders[0].price, QUOTE_DECIMAL), 
+    bestBidPrice: convertWithDecimals(orders.bid_orders[0].price, QUOTE_DECIMAL)
+  };
+}
 
-//   for (let order of orders) {
-//     if (order.o_type == USide.Ask && convertToDecimals(order.price) > bestAsk.limitPrice) {
-//       bestAsk = order;
-//     } else if (order.o_type == USide.Bid && order.limitPrice.lt(bestBid.limitPrice)) {
-//       bestBid = order;
-//     }
-//   }
+export const getRandomDecimal = (min: number, max: number) => {
+  return Math.random() * (max - min) + min;
+}
 
-//   return {
-//     bestAskPrice: bestAsk.limitPrice.toNumber() / PRICE_FACTOR, 
-//     bestBidPrice: bestBid.limitPrice.toNumber() / PRICE_FACTOR
-//   };
-// }
+export const toFixedNoRound = (number: number, precision: number): number => {
+  const factor = Math.pow(10, precision);
+  return Math.floor(number * factor) / factor;
+}
+
+export const calculateBestPrice = (orderType: number, bestBid: number, bestAsk: number) => {
+  let price = orderType == Buy ? bestAsk : bestBid;
+  const priceD = price * (getRandomDecimal(0, config.orderPricePercentHft) / 100);
+
+  if (orderType == Sell) {
+    price += priceD
+    console.log("plus")
+  } else {
+    console.log("minus")
+    price -= priceD
+  }
+
+  return toFixedNoRound(price, PRICE_CONFIG_FIXED);
+}
+
+export const orderTypeChangeIsNeeded = (orderType: number, orderTypeStreak: OrderTypeStreak) => {
+  if (orderTypeStreak.type == orderType && orderTypeStreak.counter >= config.sameOrderStreak) {
+    orderTypeStreak.counter = 0;
+    return true;
+  } else if (orderTypeStreak.type != orderType || orderTypeStreak.counter >= config.sameOrderStreak) {
+    orderTypeStreak.type = orderType;
+    orderTypeStreak.counter = 0;
+  } else {
+    orderTypeStreak.counter += 1;
+  }
+
+  return false;
+}
 
 export async function getSpin(network: string, nearAccountId: string, nearPrivateKey: string) {
   return (await createApi({

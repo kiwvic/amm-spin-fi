@@ -1,8 +1,11 @@
 {
     "nearAccountId": "abc",
-    "privateKey": "ab",
+    "privateKey": "abc",
     "nearAccountIdHFT": "abc",
     "privateKeyHFT": "abc",
+
+    "baseTokenAddress": "token.pembrock.near",
+    "quoteTokenAddress": "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near",
 
     "tokenRefinanceId": "token.pembrock.near",
 
@@ -14,7 +17,7 @@
 
     "hft": true,
     "hftChance": 0.9,
-    "orderPricePercentHft": 3,
+    "orderPricePercentHft": 1,
     "randomTokenMin": 100,
     "randomTokenMax": 300,
     "mandatoryIterationRecharge": 1,

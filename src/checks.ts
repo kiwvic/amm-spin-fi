@@ -52,3 +52,7 @@ export const isMakeMarketNeeded = (
 
   return false;
 };
+
+export const notEnoughFunds = (baseAvailable: number, quoteAvailable: number, amount: number, price: number) => {
+  return quoteAvailable < (amount * price) && baseAvailable < amount;
+}
