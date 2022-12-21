@@ -1,12 +1,10 @@
-import axios from "axios";
+import { BASE_DECIMAL, QUOTE_DECIMAL, PRICE_CONFIG_FIXED, Buy, Sell } from "./consts" 
 import { BigNumber } from "bignumber.js";
 import { Order, USide, GetOrderbookResponse } from "@spinfi/core";
 import { createApi, } from "@spinfi/node";
-import { OrdersConfig, OrderTypeStreak } from "./types";
+import { Balance, OrdersConfig, OrderTypeStreak } from "./types";
 import * as config from "../config.json"
-import { BASE_DECIMAL, QUOTE_DECIMAL, PRICE_CONFIG_FIXED, Buy, Sell } from "./consts" // TODO
-import BN from "bn.js";
-import { CoinbaseProClient } from "ccxws";
+import axios from "axios";
 
 
 export async function getPrice(tokenRefinanceId: string) {
@@ -22,6 +20,23 @@ export async function sleep(n: number) {
 
 export async function getOrderConfig() {
   return require("../order-config.json");
+}
+
+export const getRandomDecimal = (min: number, max: number) => {
+  return Math.random() * (max - min) + min;
+}
+
+export const toFixedNoRound = (number: number, precision: number): number => {
+  const factor = Math.pow(10, precision);
+  return Math.floor(number * factor) / factor;
+}
+
+export const getRandomArbitrary = (min: number, max: number) => {
+  return Math.round(Math.random() * (max - min) + min);
+}
+
+const relDiff = (a: any, b: any) => {
+  return 100*((a-b)/((a+b)/2));
 }
 
 export function convertToDecimals(
@@ -103,15 +118,6 @@ export const getBestPrice = (orders: GetOrderbookResponse) => {
   };
 }
 
-export const getRandomDecimal = (min: number, max: number) => {
-  return Math.random() * (max - min) + min;
-}
-
-export const toFixedNoRound = (number: number, precision: number): number => {
-  const factor = Math.pow(10, precision);
-  return Math.floor(number * factor) / factor;
-}
-
 export const calculateBestPrice = (bestBid: number, bestAsk: number) => {
   let randomDecimal = toFixedNoRound(getRandomDecimal(bestAsk, bestBid), PRICE_CONFIG_FIXED);
 
@@ -147,14 +153,6 @@ export async function getSpin(network: string, nearAccountId: string, nearPrivat
   })).spin;
 }
 
-export const getRandomArbitrary = (min: number, max: number) => {
-  return Math.round(Math.random() * (max - min) + min);
-}
-
-const relDiff = (a: any, b: any) => {
-  return 100*((a-b)/((a+b)/2));
-}
-
 export const changeIndexPrice = (price: number, newPrice: number): number => { 
   let priceDiff = relDiff(newPrice, price);
 
@@ -165,4 +163,26 @@ export const changeIndexPrice = (price: number, newPrice: number): number => {
   }
 
   return price;
+}
+
+export function reverseOrdertype(orderType: number) {
+  return orderType == Buy ? Sell : Buy;
+}
+
+export function forceChangeOrderType(
+  orderType: number, 
+  balance: Balance, balanceHFT: Balance,
+  randomAmount: number, price: number) {
+
+  if (orderType == Buy) {
+    if ((balanceHFT.quoteAvailable < (randomAmount * price)) || (balance.baseAvailable < randomAmount)) {
+      return true;
+    }
+  } else {
+    if ((balanceHFT.baseAvailable < randomAmount) || (balance.quoteAvailable < (randomAmount * price))) {
+      return true;
+    }
+  }
+
+  return false;
 }

@@ -1,4 +1,4 @@
-import { MarketMakerParams, OrderBook, MandatoryHFTIter, OrderTypeStreak } from "./types";
+import { MarketMakerParams, OrderBook, MandatoryHFTIter, OrderTypeStreak, Balance } from "./types";
 import { USide, Market, Spin } from "@spinfi/core";
 import { BigNumber } from "bignumber.js";
 import { isMakeMarketNeeded, notEnoughFunds, } from "./checks";
@@ -15,8 +15,9 @@ import {
   getRandomArbitrary,
   getBestPrice,
   calculateBestPrice,
-  convertWithDecimals,
-  orderTypeChangeIsNeeded
+  orderTypeChangeIsNeeded,
+  forceChangeOrderType,
+  reverseOrdertype
 } from "./util";
 
 
@@ -93,40 +94,27 @@ async function makeHFT(
   let randomAmount = getRandomArbitrary(config.randomTokenMin, config.randomTokenMax);
   let orderType = getRandomArbitrary(1, 2) - 1;
 
-  const balances = await spin.getDeposits();
-  const balancesHFT = await spinHFT.getDeposits();
-
-  const baseAvailable = convertWithDecimals(balances[config.baseTokenAddress], QUOTE_DECIMAL);
-  const quoteAvailable = convertWithDecimals(balances[config.quoteTokenAddress], QUOTE_DECIMAL);
-  const baseHFTAvailable = convertWithDecimals(balancesHFT[config.baseTokenAddress], QUOTE_DECIMAL);
-  const quoteHFTAvailable = convertWithDecimals(balancesHFT[config.quoteTokenAddress], QUOTE_DECIMAL);
+  const balance = new Balance(await spin.getDeposits());
+  const balanceHFT = new Balance(await spinHFT.getDeposits());
 
   const { bestAskPrice, bestBidPrice } = getBestPrice(await spin.getOrderbook({marketId: market.id}));
 
   let price = calculateBestPrice(bestBidPrice, bestAskPrice);
 
   if (
-      notEnoughFunds(baseAvailable, quoteAvailable, randomAmount, price) && 
-      notEnoughFunds(baseHFTAvailable, quoteHFTAvailable, randomAmount, price)
+    notEnoughFunds(balance, randomAmount, price) && 
+    notEnoughFunds(balanceHFT, randomAmount, price)
     ) {
     return randomSleepTimeMs;
   }
 
-  let forceChangeOrderType = false;
-  if (orderType == Buy) {
-    if ((quoteHFTAvailable < (randomAmount * price)) || (baseAvailable < randomAmount)) {
-      orderType = orderType == Buy ? Sell : Buy;
-      forceChangeOrderType = true;
-    }
-  } else {
-    if ((baseHFTAvailable < randomAmount) || (quoteAvailable < (randomAmount * price))) {
-      orderType = orderType == Buy ? Sell : Buy;
-      forceChangeOrderType = true;
-    }
+  const forcedChangeOrderType = forceChangeOrderType(orderType, balance, balanceHFT, randomAmount, price);
+  if (forcedChangeOrderType) {
+    orderType = reverseOrdertype(orderType);
   }
 
-  if (orderTypeChangeIsNeeded(orderType, orderTypeStreak) && !forceChangeOrderType) {
-    orderType = orderType == Buy ? Sell : Buy;
+  if (orderTypeChangeIsNeeded(orderType, orderTypeStreak) && !forcedChangeOrderType) {
+    orderType = reverseOrdertype(orderType);
     randomAmount += 100;
   }
 

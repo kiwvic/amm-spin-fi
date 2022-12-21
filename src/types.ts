@@ -1,4 +1,7 @@
-import { Spin, Market } from "@spinfi/core";
+import { Spin, GetDepositsResponse } from "@spinfi/core";
+import * as config from "../config.json";
+import { convertWithDecimals } from "./util";
+import { QUOTE_DECIMAL } from "./consts"
 
 
 export interface MarketMakerParams {
@@ -44,3 +47,14 @@ export interface OrderTypeStreak {
   type: number
 }
 
+export class Balance {
+  deposits: GetDepositsResponse;
+  baseAvailable: number;
+  quoteAvailable: number;
+
+  constructor(deposits: GetDepositsResponse) {
+    this.deposits = deposits;
+    this.baseAvailable = convertWithDecimals(deposits[config.baseTokenAddress], QUOTE_DECIMAL);
+    this.quoteAvailable = convertWithDecimals(deposits[config.quoteTokenAddress], QUOTE_DECIMAL);
+  }
+}

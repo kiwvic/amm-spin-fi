@@ -1,5 +1,5 @@
 import * as config from "../config.json";
-import { OrderBook, Order_ } from "./types";
+import { Balance, OrderBook, Order_ } from "./types";
 
 const sortOrderBook = (orderBook: OrderBook) => {
   orderBook.buy.sort((a: Order_, b: Order_) => a.price - b.price);
@@ -56,6 +56,6 @@ export const isMakeMarketNeeded = (
   return false;
 };
 
-export const notEnoughFunds = (baseAvailable: number, quoteAvailable: number, amount: number, price: number) => {
-  return quoteAvailable < (amount * price) && baseAvailable < amount;
+export const notEnoughFunds = (balance: Balance, amount: number, price: number) => {
+  return balance.quoteAvailable < (amount * price) && balance.baseAvailable < amount;
 }
