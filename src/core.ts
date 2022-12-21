@@ -65,6 +65,19 @@ async function makeMarketSleep(orderDelayMs: number, randomSleepTimeMs: number) 
   await sleep(orderDelayMs - randomSleepTimeMs);
 }
 
+async function cancelHFTOrder(spin: Spin, marketId: number, price: number, amount: number) {
+  const orders = await spin.getOrders({marketId: marketId});
+
+  for (const order of orders) {
+    if (
+      order.price == convertToDecimals(price, QUOTE_DECIMAL) && 
+      order.remaining == convertToDecimals(amount)) {
+
+      await spin.cancelOrder({orderId: order.id, marketId: marketId});
+    }
+  }
+}
+
 async function makeHFT(
   spin: Spin, spinHFT: Spin,
   market: Market, 
@@ -132,8 +145,9 @@ async function makeHFT(
     await spin.placeBid(order);
     await spinHFT.placeAsk(order);
   }
-
-  // TODO cancel orders
+  
+  await cancelHFTOrder(spin, market.id, price, randomAmount);
+  await cancelHFTOrder(spinHFT, market.id, price, randomAmount);
 
   return randomSleepTimeMs;
 } 
