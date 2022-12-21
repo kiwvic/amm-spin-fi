@@ -6,6 +6,7 @@ import { OrdersConfig, OrderTypeStreak } from "./types";
 import * as config from "../config.json"
 import { BASE_DECIMAL, QUOTE_DECIMAL, PRICE_CONFIG_FIXED, Buy, Sell } from "./consts" // TODO
 import BN from "bn.js";
+import { CoinbaseProClient } from "ccxws";
 
 
 export async function getPrice(tokenRefinanceId: string) {
@@ -111,17 +112,16 @@ export const toFixedNoRound = (number: number, precision: number): number => {
   return Math.floor(number * factor) / factor;
 }
 
-export const calculateBestPrice = (orderType: number, bestBid: number, bestAsk: number) => {
-  let price = orderType == Buy ? bestAsk : bestBid;
-  const priceD = price * (getRandomDecimal(0, config.orderPricePercentHft) / 100);
+export const calculateBestPrice = (bestBid: number, bestAsk: number) => {
+  let randomDecimal = toFixedNoRound(getRandomDecimal(bestAsk, bestBid), PRICE_CONFIG_FIXED);
 
-  if (orderType == Sell) {
-    price += priceD
-  } else {
-    price -= priceD
+  if (randomDecimal == bestAsk) {
+    randomDecimal -= Math.pow(10, -PRICE_CONFIG_FIXED);
+  } else if (randomDecimal == bestBid) {
+    randomDecimal += Math.pow(10, -PRICE_CONFIG_FIXED);
   }
 
-  return toFixedNoRound(price, PRICE_CONFIG_FIXED);
+  return toFixedNoRound(randomDecimal, PRICE_CONFIG_FIXED);
 }
 
 export const orderTypeChangeIsNeeded = (orderType: number, orderTypeStreak: OrderTypeStreak) => {

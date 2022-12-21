@@ -75,19 +75,15 @@ async function makeHFT(
   const skip = Math.random() > config.hftChance;
 
   if (!mandatoryHftIter.appeared && mandatoryHftIter.counter >= config.mandatoryIterationRecharge) {
-    console.log("!mandatoryHftIter.appeared && mandatoryHftIter.counter >= MANDATORY_ITERATION_RECHARGE");
     mandatoryHftIter.counter = 0;
   } else if (mandatoryHftIter.appeared && mandatoryHftIter.counter >= config.mandatoryIterationRecharge) {
-    console.log("mandatoryHftIter.appeared && mandatoryHftIter.counter >= MANDATORY_ITERATION_RECHARGE");
     mandatoryHftIter.counter = 0;
     mandatoryHftIter.appeared = false;
     return randomSleepTimeMs;
   } else if (mandatoryHftIter.appeared) {
-    console.log("mandatoryHftIter.appeared");
     mandatoryHftIter.counter += 1;
     return randomSleepTimeMs;
   } else if (skip) {
-    console.log("skip");
     mandatoryHftIter.counter += 1;
     return randomSleepTimeMs;
   } 
@@ -107,7 +103,7 @@ async function makeHFT(
 
   const { bestAskPrice, bestBidPrice } = getBestPrice(await spin.getOrderbook({marketId: market.id}));
 
-  let price = calculateBestPrice(orderType, bestBidPrice, bestAskPrice);
+  let price = calculateBestPrice(bestBidPrice, bestAskPrice);
 
   if (
       notEnoughFunds(baseAvailable, quoteAvailable, randomAmount, price) && 
@@ -120,13 +116,11 @@ async function makeHFT(
   if (orderType == Buy) {
     if ((quoteHFTAvailable < (randomAmount * price)) || (baseAvailable < randomAmount)) {
       orderType = orderType == Buy ? Sell : Buy;
-      price = calculateBestPrice(orderType, bestBidPrice, bestAskPrice);
       forceChangeOrderType = true;
     }
   } else {
     if ((baseHFTAvailable < randomAmount) || (quoteAvailable < (randomAmount * price))) {
       orderType = orderType == Buy ? Sell : Buy;
-      price = calculateBestPrice(orderType, bestBidPrice, bestAskPrice);
       forceChangeOrderType = true;
     }
   }

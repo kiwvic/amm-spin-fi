@@ -18,7 +18,7 @@
     "autoMarketMaker": false,
     "hft": true,
     "hftChance": 0.9,
-    "orderPricePercentHft": 1,
+    "orderPricePercentHft": 2,
     "randomTokenMin": 20,
     "randomTokenMax": 100,
     "mandatoryIterationRecharge": 1,
