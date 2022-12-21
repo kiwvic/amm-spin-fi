@@ -1,3 +1,4 @@
+import * as config from "../config.json";
 import { OrderBook, Order_ } from "./types";
 
 const sortOrderBook = (orderBook: OrderBook) => {
@@ -43,6 +44,8 @@ export const isMakeMarketNeeded = (
   quantityThreshold: number
 ) => {
   sortOrderBook(currentOrders);
+
+  if (!config.autoMarketMaker) return false
 
   if (amountOfOrdersChanged(currentOrders, configOrders)) return true;
   if (priceChanged(currentOrders, configOrders, priceThreshold)) return true;

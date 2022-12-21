@@ -184,7 +184,7 @@ export async function makeMarket(params: MarketMakerParams) {
     const userOrderBook = userOrdersToOrderBook(userOrdersRaw);
     const configOrderBook = getOrderBookFromConfig(orderConfig, indexPrice, baseQuantity, quoteQuantity);
 
-    if (userOrderBook.buy.length > 0) {
+    if (userOrderBook.buy.length > 0 || !config.autoMarketMaker && config.hft) {
       randomSleepTimeMs = await makeHFT(spin, spinHFT, market, mandatoryHftIter, orderTypeStreak);
     }
 

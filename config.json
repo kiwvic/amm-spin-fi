@@ -11,15 +11,16 @@
 
     "marketId": 9,
     "baseQuantity": 200,
-    "quoteQuantity": 20,
+    "quoteQuantity": 40,
     "network": "mainnet",
     "orderDelayMs": 120000,
 
+    "autoMarketMaker": false,
     "hft": true,
     "hftChance": 0.9,
     "orderPricePercentHft": 1,
-    "randomTokenMin": 100,
-    "randomTokenMax": 300,
+    "randomTokenMin": 20,
+    "randomTokenMax": 100,
     "mandatoryIterationRecharge": 1,
     "sameOrderStreak": 3,
     "priceChangeThresholdPercent": 1

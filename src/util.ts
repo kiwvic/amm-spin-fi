@@ -117,9 +117,7 @@ export const calculateBestPrice = (orderType: number, bestBid: number, bestAsk: 
 
   if (orderType == Sell) {
     price += priceD
-    console.log("plus")
   } else {
-    console.log("minus")
     price -= priceD
   }
 
