@@ -78,14 +78,7 @@ async function cancelHFTOrder(spin: Spin, marketId: number, price: number, amoun
   }
 }
 
-async function makeHFT(
-  spin: Spin, spinHFT: Spin,
-  market: Market, 
-  mandatoryHftIter: MandatoryHFTIter, orderTypeStreak: OrderTypeStreak
-) {
-  if (!config.hft) return 0;
-
-  let randomSleepTimeMs = 0;
+function skipHFT(mandatoryHftIter: MandatoryHFTIter) {
   const skip = Math.random() > config.hftChance;
 
   if (!mandatoryHftIter.appeared && mandatoryHftIter.counter >= config.mandatoryIterationRecharge) {
@@ -93,16 +86,26 @@ async function makeHFT(
   } else if (mandatoryHftIter.appeared && mandatoryHftIter.counter >= config.mandatoryIterationRecharge) {
     mandatoryHftIter.counter = 0;
     mandatoryHftIter.appeared = false;
-    return randomSleepTimeMs;
-  } else if (mandatoryHftIter.appeared) {
+    return true;
+  } else if (mandatoryHftIter.appeared || skip) {
     mandatoryHftIter.counter += 1;
-    return randomSleepTimeMs;
-  } else if (skip) {
-    mandatoryHftIter.counter += 1;
-    return randomSleepTimeMs;
+    return true;
   } 
   mandatoryHftIter.appeared = true;
   mandatoryHftIter.counter += 1;
+
+  return false;
+}
+
+async function makeHFT(
+  spin: Spin, spinHFT: Spin,
+  market: Market, 
+  mandatoryHftIter: MandatoryHFTIter, orderTypeStreak: OrderTypeStreak
+) {
+  let randomSleepTimeMs = 0;
+
+  if (!config.hft) return randomSleepTimeMs;
+  if (skipHFT(mandatoryHftIter)) return randomSleepTimeMs;
 
   let randomAmount = getRandomArbitrary(config.randomTokenMin, config.randomTokenMax);
   let orderType = getRandomArbitrary(1, 2) - 1;
