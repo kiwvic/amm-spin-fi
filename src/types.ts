@@ -54,7 +54,7 @@ export class Balance {
 
   constructor(deposits: GetDepositsResponse) {
     this.deposits = deposits;
-    this.baseAvailable = convertWithDecimals(deposits[config.baseTokenAddress], QUOTE_DECIMAL);
+    this.baseAvailable = convertWithDecimals(deposits[config.baseTokenAddress]);
     this.quoteAvailable = convertWithDecimals(deposits[config.quoteTokenAddress], QUOTE_DECIMAL);
   }
 }
