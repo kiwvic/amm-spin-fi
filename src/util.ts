@@ -31,6 +31,11 @@ export const toFixedNoRound = (number: number, precision: number): number => {
   return Math.floor(number * factor) / factor;
 }
 
+function round(value: number, precision: number) {
+  var factor = Math.pow(10, precision || 0);
+  return Math.round(value * factor) / factor;
+}
+
 export const getRandomArbitrary = (min: number, max: number) => {
   return Math.round(Math.random() * (max - min) + min);
 }
@@ -121,10 +126,11 @@ export const getBestPrice = (orders: GetOrderbookResponse) => {
 export const calculateBestPrice = (bestBid: number, bestAsk: number) => {
   let randomDecimal = toFixedNoRound(getRandomDecimal(bestAsk, bestBid), PRICE_CONFIG_FIXED);
 
+  const extra = round(Math.pow(10, -PRICE_CONFIG_FIXED), PRICE_CONFIG_FIXED);
   if (randomDecimal == bestAsk) {
-    randomDecimal -= Math.pow(10, -PRICE_CONFIG_FIXED);
+    randomDecimal -= extra;
   } else if (randomDecimal == bestBid) {
-    randomDecimal += Math.pow(10, -PRICE_CONFIG_FIXED);
+    randomDecimal += extra;
   }
 
   return toFixedNoRound(randomDecimal, PRICE_CONFIG_FIXED);
